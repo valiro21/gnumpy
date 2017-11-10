@@ -8,7 +8,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 
 setup(name='gnumpy',
-      version='0.3dev',
+      version='0.3.1dev',
       description="Gnumpy is a simple Python module that interfaces in a way "
       "almost identical to numpy, but does its computations on your "
       "computer's  GPU, using Cudamat.",
@@ -17,4 +17,5 @@ setup(name='gnumpy',
       license='BSD-derived (see LICENSE.txt)',
       url='http://www.cs.toronto.edu/~tijmen/gnumpy.html',
       py_modules=['gnumpy', 'npmat'],
+      install_requires=['numpy<=1.11.3']
       )

@@ -1,6 +1,28 @@
+"""
 
+Modified work Copyright (c) 2017 Valentin-Bogdan Roşca 
 
-import os, pdb, time, warnings
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
+import os, pdb, time, warnings, pkg_resources
+pkg_resources.require('numpy<=1.11.3')
 import numpy as np
 
 __DTYPE__ = np.float64
@@ -34,7 +56,7 @@ IncompatibleDimensionsException = CUDAMatException("Incompatible matrix dimensio
 InvalidConfig = CUDAMatException("Invalid Configuration Error (i.e., a dim of the array must be smaller than 2**16.")
 ## TODO: Figure out which functions produce an invalid config error. These are those who allocate a thread per col/row/elem.
 ## Those who allocate a bunch of rows per thread, like mult, add, sub, etc, should be immune to the invalid
-## configuration error. PS: this error occurs on the real cudamat, which is why it happens. 
+## configuration error. PS: this error occurs on the real cudamat, which is why it happens.
 ## Sum/Max/Cumsum
 MAX_DIM = 2**16
 
@@ -102,14 +124,14 @@ class CUDAMatrix(object):
 
         if self.shape != shape:
 
-            print 'CUDAMatrix: resize (%s -> %s)' % (self.shape, shape)
+            print('CUDAMatrix: resize (%s -> %s)' % (self.shape, shape))
             #self.numpy_array = np.resize(self.numpy_array, shape).astype(__DTYPE__)
             self.numpy_array.resize(shape)
             self.numpy_array[:] = 0
 
 
         return self
-    
+
     @property
     def T(self):
         return CUDAMatrix(self.numpy_array.T)
@@ -137,7 +159,7 @@ class CUDAMatrix(object):
         Copy the matrix to the GPU.
         """
 
-        pass 
+        pass
 
 
 
@@ -152,7 +174,7 @@ class CUDAMatrix(object):
         """
 
         assert target.shape[0]==self.shape[0]
-        assert indices.shape[0]==1 
+        assert indices.shape[0]==1
         assert indices.shape[1] == target.shape[1]
 
         for c in range(target.shape[1]):
@@ -229,7 +251,7 @@ class CUDAMatrix(object):
         if is_trans is True:
             self.numpy_array = self.numpy_array.T
 
-    
+
 
     def slice(self, first_col, last_col):
         return CUDAMatrix(self.numpy_array[:, first_col:last_col], ref=False)
@@ -239,7 +261,7 @@ class CUDAMatrix(object):
         Get the rows with indices start through end. If target is not provided
         memory for a new matrix will be allocated.
         """
-                        
+
 
 
         ans = CUDAMatrix(self.numpy_array[start:end, :].copy())
@@ -303,13 +325,13 @@ class CUDAMatrix(object):
     #     if not (np_ints.max() < K and np_ints.min() >= 0):
     #         raise ValueError("Index out of bounds.")
 
-        
+
     #     target.numpy_array[:] = self.numpy_array[:, np_ints.flatten()]
 
 
 
     #     return target
-        
+
 
 
 
@@ -380,7 +402,7 @@ class CUDAMatrix(object):
         return a.add_col_vec(b, target = self)
 
 
-        
+
     def add_col_mult(self, vec, mult, target = None):
         """
         Add a multiple of vector vec to every column of the matrix. If a target
@@ -411,7 +433,7 @@ class CUDAMatrix(object):
         return a.add_col_vec(b, m, target = self)
 
 
-        
+
     def add_row_vec(self, vec, target = None):
         """
         Add vector vec to every row of the matrix. If a target is provided,
@@ -435,7 +457,7 @@ class CUDAMatrix(object):
         return target
 
 
-        
+
     def assign_add_row_vec(self, a, b):
         return a.add_row_vec(b, target = self)
 
@@ -464,7 +486,7 @@ class CUDAMatrix(object):
 
 
         return target
-        
+
 
 
     def mult_by_row(self, vec, target = None):
@@ -488,7 +510,7 @@ class CUDAMatrix(object):
         target.numpy_array[:] = vec.numpy_array * self.numpy_array
 
         return target
-        
+
 
 
 
@@ -553,7 +575,7 @@ class CUDAMatrix(object):
     def add_sums(self, mat, axis, mult = 1.):
         """
         Add a multiple of the sums of the matrix mat along the given dimension
-        to self. 
+        to self.
         """
 
 
@@ -648,10 +670,10 @@ class CUDAMatrix(object):
 
             target.resize((1, n))
 
- 
+
             target.numpy_array[:] = self.numpy_array.max(0)
 
-        
+
 
         elif axis == 1:
             # IN theory: we are supposed to do this:
@@ -661,7 +683,7 @@ class CUDAMatrix(object):
 #                 target = empty((m, 1))
 #             else:
 #                 target.resize((m, 1))
-                
+
 
 
 #             err_code =  _cudamat.max_by_axis(self.p_mat, target.p_mat, ct.c_int(axis))
@@ -834,7 +856,7 @@ class CUDAMatrix(object):
         self.numpy_array += mat2.numpy_array * alpha
 
         return self
-    
+
     def assign_mult(self, mat2, alpha):
         self.resize(mat2.shape)
         self.assign(0)
@@ -875,7 +897,7 @@ class CUDAMatrix(object):
         elif isinstance(val, (int, float, __DTYPE__)):
             target.numpy_array[:] = self.numpy_array + val
         else:
-            raise ValueError, "Value must be of type CUDAMatrix, int, or float."
+            raise ValueError("Value must be of type CUDAMatrix, int, or float.")
 
 
 
@@ -906,7 +928,7 @@ class CUDAMatrix(object):
         elif isinstance(val, (int, float, __DTYPE__)):
             target.numpy_array[:] = self.numpy_array - val
         else:
-            raise ValueError, "Value must be of type CUDAMatrix, int, or float."
+            raise ValueError("Value must be of type CUDAMatrix, int, or float.")
 
 
 
@@ -939,7 +961,7 @@ class CUDAMatrix(object):
         elif isinstance(val, (int, float, __DTYPE__)):
             target.numpy_array[:] = self.numpy_array / val
         else:
-            raise ValueError, "Value must be of type CUDAMatrix, int, or float."
+            raise ValueError("Value must be of type CUDAMatrix, int, or float.")
 
 
 
@@ -971,7 +993,7 @@ class CUDAMatrix(object):
         elif isinstance(val, (int, float, __DTYPE__)):
             target.numpy_array[:] = self.numpy_array * val
         else:
-            raise ValueError, "Value must be of type CUDAMatrix, int, or float."
+            raise ValueError("Value must be of type CUDAMatrix, int, or float.")
 
 
 
@@ -1011,7 +1033,7 @@ class CUDAMatrix(object):
         """
         Divide the matrix by a scalar.
         """
-        
+
         return self.divide(alpha, target)
 
 
@@ -1153,16 +1175,16 @@ def abs(mat, target = None):
 
 
 def log_1_plus_exp(mat, target = None):
-   """
-   Apply log(1+exp(x)) to each element of the matrix mat.
-   """
-   if not target:
-       target = mat
-   mask = mat.numpy_array > 0
-   target.numpy_array[mask] = mat.numpy_array[mask] + np.log(1+np.exp(-mat.numpy_array[mask]))
-   mask = np.logical_not(mask)
-   target.numpy_array[mask] = np.log(1+np.exp(mat.numpy_array[mask]))
-   return target
+    """
+    Apply log(1+exp(x)) to each element of the matrix mat.
+    """
+    if not target:
+        target = mat
+    mask = mat.numpy_array > 0
+    target.numpy_array[mask] = mat.numpy_array[mask] + np.log(1+np.exp(-mat.numpy_array[mask]))
+    mask = np.logical_not(mask)
+    target.numpy_array[mask] = np.log(1+np.exp(mat.numpy_array[mask]))
+    return target
 log_1_sum_exp = log_1_plus_exp
 
 def log(mat, target = None):
@@ -1282,7 +1304,7 @@ def cublas_shutdown():
 
 
 # The following functions are for implementing things like coarse filters and
-# models with replicated local filters. At the moment they are quite slow. 
+# models with replicated local filters. At the moment they are quite slow.
 
 def sum_superpixels(source, target, w, temp = None):
     raise NotImplemented()
@@ -1317,7 +1339,7 @@ def get_item_from_each_row(source, target, inds, num_rows, num_cols):
     t = target.numpy_array.reshape(num_rows)
 
     for i in range(num_rows):
-        t[i] = src[i,ix[i]] 
+        t[i] = src[i,ix[i]]
     return target
 
 
@@ -1354,7 +1376,7 @@ def abs(X, aux):
 
 def total_sum(X):
     return X.total_sum()
- 
+
 
 def mean(mat, axis, target = None):
 
@@ -1379,7 +1401,7 @@ def total_mean(mat):
 
 
 def cumsum(mat, target):
-    
+
     target.resize(mat.shape)
 
     target.numpy_array[:] = mat.numpy_array.cumsum(1)
@@ -1404,8 +1426,8 @@ def cumsum(mat, target):
 def multi_transpose(IN, OUT, w, h, batch_size):
     i = IN.numpy_array
     o = OUT.numpy_array
-    
-#     o = o.reshape(batch_size, w, h) 
+
+#     o = o.reshape(batch_size, w, h)
 #     o[:] = i.reshape(batch_size, h, w).transpose([0,2,1])
 #     OUT.numpy_array[:] = o.reshape(*OUT.numpy_array.shape)
 
@@ -1417,7 +1439,7 @@ def multi_transpose(IN, OUT, w, h, batch_size):
     return OUT
 
 def ind_incr(target, inds, axis):
-    
+
 
     assert target.shape[1] == inds.shape[0] * inds.shape[1]
     assert inds.shape[1] == 1 or inds.shape[0] == 1
@@ -1474,7 +1496,7 @@ class softmax:
         self.probs_small = empty()
 
 
-    
+
     def __call__(self, mat, target):
 
 
@@ -1519,7 +1541,7 @@ class softmax:
 
 
         self.neg_max.\
-            assign_max(mat, 
+            assign_max(mat,
                        axis = self.axis,
                        transpose_aux = self.transpose_aux).\
             mult(-1)
@@ -1540,14 +1562,14 @@ class softmax:
             self.probs.mult_by_col(self.Z)
 
         target.assign(self.probs)
-        
+
 
 
 
     def __call_helper_small__(self, mat, target):
 
         self.neg_max_small.\
-            assign_max(mat, 
+            assign_max(mat,
                        axis = self.axis,
                        transpose_aux = self.transpose_aux_small).\
             mult(-1)
@@ -1575,7 +1597,7 @@ class softmax:
 
         target.assign(self.probs_small)
 
-        
+
 
 
 
@@ -1586,7 +1608,7 @@ class softmax:
     def log_Zs(self, mat, target):
 
         self.neg_max.\
-            assign_max(mat, 
+            assign_max(mat,
                        axis = self.axis,
                        transpose_aux = self.transpose_aux).\
             mult(-1)
@@ -1604,7 +1626,7 @@ class softmax:
 
         return target
 
-        
+
 
 
 
@@ -1619,19 +1641,19 @@ class sample_multinomial:
         self.cumsums = empty()
         self.cumsums_t = empty()
         self.probs_t = empty()
-        
+
 
 
         self.cumsums_small = empty()
         self.cumsums_t_small = empty()
         self.probs_t_small = empty()
-        
+
 
 
 
 
         self.set_probs(probs)
-        
+
 
         self.samples = empty()
         self.samples_small = empty()
@@ -1639,7 +1661,7 @@ class sample_multinomial:
 
         if axis == 0:
 
-            width = probs.shape[1] 
+            width = probs.shape[1]
             std_width = min(width, MAX_ELEMS)
 
 
@@ -1661,7 +1683,7 @@ class sample_multinomial:
         elif axis == 1:
 
 
-            width = probs.shape[0] 
+            width = probs.shape[0]
             std_width = min(width, MAX_ELEMS)
 
 
@@ -1729,7 +1751,7 @@ class sample_multinomial:
                 sum(self.axis, target = self.samples)
 
 
-            
+
 
             ind_incr(target, self.samples, self.axis)
 
@@ -1774,7 +1796,7 @@ class sample_multinomial:
                 sum(self.axis, target = self.samples_small)
 
 
-            
+
 
             ind_incr(target, self.samples_small, self.axis)
 
@@ -1790,8 +1812,8 @@ class sample_multinomial:
         if probs.shape != target.shape:
             target.resize(probs.shape)
 
-        
-        ## yes: we make a loop. 
+
+        ## yes: we make a loop.
 
         pos = 0
         step = MAX_ELEMS
@@ -1833,13 +1855,13 @@ class robust_multinomial:
         self.cumsums = empty()
         self.cumsums_t = empty()
         self.probs_t = empty()
-        
+
 
 
         self.cumsums_small = empty()
         self.cumsums_t_small = empty()
         self.probs_t_small = empty()
-        
+
 
 
 
@@ -1851,7 +1873,7 @@ class robust_multinomial:
 
         if axis == 0:
 
-            width = shape[1] 
+            width = shape[1]
             std_width = min(width, MAX_ELEMS)
 
 
@@ -1942,7 +1964,7 @@ class robust_multinomial:
                 sum(self.axis, target = self.samples)
 
 
-            
+
 
             ind_incr(target, self.samples, self.axis)
 
@@ -1986,7 +2008,7 @@ class robust_multinomial:
                 sum(self.axis, target = self.samples_small)
 
 
-            
+
 
             ind_incr(target, self.samples_small, self.axis)
 
@@ -2002,8 +2024,8 @@ class robust_multinomial:
         if probs.shape != target.shape:
             target.resize(probs.shape)
 
-        
-        ## yes: we make a loop. 
+
+        ## yes: we make a loop.
 
         pos = 0
         step = MAX_ELEMS
