@@ -25,6 +25,7 @@ import os, pdb, time, warnings, pkg_resources
 pkg_resources.require('numpy<=1.11.3')
 import numpy as np
 
+_cudamat = None
 __DTYPE__ = np.float64
 
 
